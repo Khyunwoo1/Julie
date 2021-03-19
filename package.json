@@ -1,0 +1,19 @@
+{
+  "name": "julie",
+  "version": "1.0.0",
+  "description": "Web Navigation Tool",
+  "main": "content.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Khyunwoo1/Julie.git"
+  },
+  "author": "Paul Kim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Khyunwoo1/Julie/issues"
+  },
+  "homepage": "https://github.com/Khyunwoo1/Julie#readme"
+}
