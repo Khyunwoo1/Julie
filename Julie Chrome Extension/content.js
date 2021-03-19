@@ -21,7 +21,7 @@ setTimeout(function(){
     - if yes, check if shortcuts for user exists
     - if no, based off if cached info exists, response will prompt front end to ask if want to create user account
    */
-  fetch('http://localhost:3333/', {
+  fetch('http://localhost:3333/rankings', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
@@ -43,7 +43,7 @@ setTimeout(function(){
       document.querySelector('button').addEventListener('click', onclick, false)
      
       function onclick(){
-        fetch('http://localhost:3333/', {
+        fetch('http://localhost:3333/rankings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
