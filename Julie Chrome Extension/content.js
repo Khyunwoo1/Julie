@@ -8,6 +8,12 @@ setTimeout(function(){
       window.speechSynthesis.speak(msg)
   }
 
+  // Get current tab's URL
+  chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+    let url = tabs[0].url;
+    // use `url` here inside the callback because it's asynchronous!
+    let shortURL = url.match(/\.(.*?)\.co/i)[1];
+        julieTalks(`You're on ${shortURL}.`)
 
   // Check if new user
   let username;
@@ -21,24 +27,26 @@ setTimeout(function(){
     - if yes, check if shortcuts for user exists
     - if no, based off if cached info exists, response will prompt front end to ask if want to create user account
    */
-  fetch('http://localhost:3333/rankings', {
-    method: 'GET',
+
+  fetch('http://localhost:3333/rankings/', {
+    method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    params: JSON.stringify({
+    body: JSON.stringify({
+      domainName: shortURL,
     })
   })
     .then((res) => res.json())
     .then((data)=> {
-      // later on create an if/else that actually works
-      // this will be the webpage load intro speech giving all relevant options
-      // let msg = new SpeechSynthesisUtterance(`here are Julie's rankings for this site.`)
-      // let voices = window.speechSynthesis.getVoices()
-      // msg.voice = voices[3]
-      // window.speechSynthesis.speak(msg)
+     /**
+      [
+      { _id: 1, ranking: 1, dom_element: 'button', name: 'search button' }
+      ]
+    */
 
-      julieTalks(`here are Julie's rankings for this site.`)
+      julieTalks(`These are are the top results. ${data[0].ranking}. ${data[0].name}`)
+
       // POST req template
       document.querySelector('button').addEventListener('click', onclick, false)
      
@@ -69,8 +77,9 @@ setTimeout(function(){
       // normal screen reading
 
 
-      // end of .then
-    }) 
+      
+    }); // end of .then
+    }); // end of get current tab's url
 });
 
 function speak (message) {
