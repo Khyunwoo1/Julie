@@ -1,3 +1,15 @@
+// var nodes = document.evaluate("//body[@id='walking-icon']", document, null, XPathResult.ANY_TYPE, null)
+// var resultNode = nodes.iterateNext()
+// if (resultNode) {
+
+//   // Found the first node. Output its contents.
+//   // basically outputs everything contained within the thing
+//   // returns string
+//   // can regex
+//   console.log(resultNode.innerHTML);
+// }
+
+
 setTimeout(function(){ 
 
   // TTS 
@@ -7,6 +19,22 @@ setTimeout(function(){
       msg.voice = voices[3]
       window.speechSynthesis.speak(msg)
   }
+
+  // DOM Traverse
+  // function domTraversal(){
+  //   julieTalks('inside dominos site')
+  //   var nodes = document.evaluate("//body[@id='_dpz']", document, null, XPathResult.ANY_TYPE, null)
+  //   var resultNode = nodes.iterateNext()
+  //   if (resultNode) {
+  //     alert('yo')
+  //     // Found the first node. Output its contents.
+  //     // basically outputs everything contained within the thing
+  //     // returns string
+  //     // can regex
+  //     console.log('typeof: ', typeof resultNode.innerHTML);
+  //   }
+    
+  // }
 
   // Get current tab's URL
   chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
@@ -18,49 +46,67 @@ setTimeout(function(){
   // Check if new user
   let username;
 
-  // Fetch request to see if current site has existing rankings
-  /**
-   Backend logic will:
-    - check if user rankings for this site exists
-    - check if user acc exists
-    - check some cache to see if site was visited before
-    - if yes, check if shortcuts for user exists
-    - if no, based off if cached info exists, response will prompt front end to ask if want to create user account
-   */
-
-  fetch('http://localhost:3333/rankings/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      domainName: shortURL,
+    fetch('http://localhost:3333/rankings/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        domainName: shortURL,
+      })
     })
-  })
     .then((res) => res.json())
     .then((data)=> {
-     /**
-      [
-      { _id: 1, ranking: 1, dom_element: 'button', name: 'search button' }
-      ]
-    */
+    // have to make it modular so that it does initial get request
+    // then if the response is (sorry bro, that domain doesnt exist yet)
 
+    // then does web crawler algo run
+    // finds important rankings
+
+    // then does a post request 
+    // at that point, table creation + updates happen
+
+    // Check if Data is an empty array  
+    if(data.length !== 0){
       julieTalks(`These are are the top results. ${data[0].ranking}. ${data[0].name}`)
+    } else {
+      domTraversal();
+
+      // fetch('http://localhost:3333/rankings/', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     domainName: shortURL,
+      //   })
+      // })
+      //   .then(res => json(res))
+      //   .then((data)=> {
+      //   }
+      /**
+        [
+        { _id: 1, ranking: 1, dom_element: 'button', name: 'search button' }
+        ]
+      */
+
+    }
+
 
       // POST req template
-      document.querySelector('button').addEventListener('click', onclick, false)
+      // document.querySelector('button').addEventListener('click', onclick, false)
      
-      function onclick(){
-        fetch('http://localhost:3333/rankings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          params: JSON.stringify({
-          })
-        })
-          .then((res) => res.json()) 
-      }
+      // function onclick(){
+      //   fetch('http://localhost:3333/rankings', {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json'
+      //     },
+      //     params: JSON.stringify({
+      //     })
+      //   })
+      //     .then((res) => res.json()) 
+      // }
 
       /**
         ASSUMING THIS PART WORKS
@@ -89,23 +135,3 @@ function speak (message) {
   window.speechSynthesis.speak(msg)
 }
 speak('')
-
-/** 
-
-WILL NEED TO FIX THIS WITH FIGURING OUT ASYNC OR PUTTING THIS
-AS PART OF THE BACKGROUND.JS
-
-this traverses dom of current page 
-
-var nodes = document.evaluate("//body[@id='_dpz']", document, null, 
-                               XPathResult.ANY_TYPE, null)
-var resultNode = nodes.iterateNext()
-if (resultNode) {
-  // Found the first node. Output its contents.
-  // basically outputs everything contained within the thing
-  // returns string
-  // can regex
-  console.log('typeof: ', typeof resultNode.innerHTML);
-
-}
-*/
