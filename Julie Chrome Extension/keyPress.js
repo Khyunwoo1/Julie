@@ -29,7 +29,9 @@ window.addEventListener("keyup", function(event) {
   }
   
   if (event.key === "3") {
-    console.log('edit rankings')
+    console.log('make Julie shut up')
+    const myMessage = {message: event.key}
+    chrome.runtime.sendMessage({message: myMessage});
   }
 
   if (event.key === "4") {

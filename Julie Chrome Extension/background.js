@@ -6,35 +6,72 @@ function speak (message) {
 }
 speak('');
 
+// Toggle Julie TTS on or off
+let letJulieSpeak = true;
+
 // TTS 
 function julieTalks(message){
-  let msg = new SpeechSynthesisUtterance(message)
-    let voices = window.speechSynthesis.getVoices()
-    msg.voice = voices[4]
-    window.speechSynthesis.speak(msg)
+  if(letJulieSpeak){
+    let msg = new SpeechSynthesisUtterance(message)
+      let voices = window.speechSynthesis.getVoices()
+      msg.voice = voices[4]
+      window.speechSynthesis.speak(msg)
+  }
 }
 
-// THIS WILL PROB HAVE TO BE SOME SORT OF OBJ BASED OFF WHAT MESSAGE IS
+// Basic user input
+async function userCRUDInput(input){
+
+  try {
+    // Works
+    await fetch('http://localhost:3333/rankings/edit/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userInput: input,
+      })
+    })
+
+    
+
+  } catch (err) {
+    console.log('error occured', err);
+  }
+}
+
+
 let messageFromFront;
 // when file gets executed, we need to get a message back from content.js
 let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
+
   if(req.message){
     messageFromFront = req.message;
     console.log('message received from front', messageFromFront)
+    
+    // This makes Julie stfu
+    if(messageFromFront.message === '3'){
+      console.log('will she shut up? ',letJulieSpeak)
+      if(letJulieSpeak){
+        letJulieSpeak = false;
+      } else {
+        letJulieSpeak = true;
+      }
+    } else {
+
+      //! COME BACK AND FIX BUG WITH THIS
+      userCRUDInput(messageFromFront.message);
+      messageFromFront.message = undefined;
+    }
+      
   }
 });
 
 // Keypress injection
 const tabCache = {};
 function keyPressInjection(){
-
-  chrome.tabs.executeScript(null, {file: './keyPress.js'}, ()=>{
-    // Julie: looks like users put in rankings, wanna hear them?
-    // looks like its having the stacking issue like last time
-    // see if sending through messenger changes anything
-    julieTalks('1 or 2?') 
-    console.log('yoyoyo')
-    
+  chrome.tabs.executeScript(null, {file: './keyPress.js'}, ()=>{    
   })
 };
 
@@ -46,10 +83,9 @@ chrome.tabs.onActivated.addListener(tab =>{
     let shortURL = url.match(/\.(.*?)\.co/i)[1];
     julieTalks(shortURL)
 
-    async function fetchRequestChain(){
+    function fetchRequestChain(){
 
-      try{
-      const response = await fetch('http://localhost:3333/rankings/', {
+      fetch('http://localhost:3333/rankings/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,26 +94,35 @@ chrome.tabs.onActivated.addListener(tab =>{
           domainName: shortURL,
         })
       })
+      .then(res => res.json())
+      .then(data =>{
 
       // if we do get rankings back
-      if(response){
+      if(data.length !== 0){
+        julieTalks(`These are the top ${data.length} rankings for this site.`) 
+        // loop through responses up to 5
+        data.forEach(el => {
+          julieTalks(`${el.ranking}. ${el.name}`); 
+        })
         // check if in cache
         if(!tabCache[shortURL]){
+
           // store url in cache here
           tabCache[shortURL] = true;
           // invoke inject func
           keyPressInjection();
-          console.log('message from front', messageFromFront);
+
         } else {
+          messageFromFront.message = undefined;
+          // we put the if conditions for checking key presses here
           console.log('tabCache ', tabCache);
         }
+
+      } else {
+        // make sure we set the content.js script inject in the same format as the keypress inject
+        julieTalks(`nope`) 
       }
-
-
-
-    } catch (err){
-      
-    }
+    });
     }
     fetchRequestChain();
     
