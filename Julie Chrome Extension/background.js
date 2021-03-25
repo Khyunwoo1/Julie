@@ -19,22 +19,33 @@ function julieTalks(message){
   }
 }
 
-// Basic user input
-async function userCRUDInput(input){
-  try {
-    await fetch('http://localhost:3333/rankings/edit/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userInput: input,
-      })
-    })
+/**
+  FOR NOW:
+  - 1 = upvoting
+  - 2 = downvoting
+  - 3 = adding 
+  - 4 = request delete
+  - 5 = report
+*/
 
-  } catch (err) {
-    console.log('error occured', err);
-  }
+
+// Basic user input
+function userCRUDInput(input){
+
+  fetch('http://localhost:3333/rankings/edit/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userInput: input,
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log('returned from user input backend', data);
+  })
+
 }
 
 // Gets Julie's algo rankings
@@ -57,6 +68,19 @@ function julieAlgoPostReq(arrayOfImportantEls){
   });
 }
 
+
+/**
+  - Standard keys should exist in an obj that can be manipulated
+  const globalKeys = {
+    1 : upvote function fetch request,
+    2 : downvote function fetch request,
+    3 : delete function fetch request,
+  } 
+
+
+
+*/
+
 let messageFromFront;
 // when file gets executed, we need to get a message back from content.js
 let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
@@ -67,6 +91,7 @@ let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
     julieAlgoPostReq(messageFromFront.message);
     return;
   }
+
 
   // This makes Julie stfu
   if(messageFromFront.message === '3'){
