@@ -19,18 +19,22 @@ function julieTalks(message){
   }
 }
 
-/**
-  FOR NOW:
-  - 1 = upvoting
-  - 2 = downvoting
-  - 3 = adding 
-  - 4 = request delete
-  - 5 = report
-*/
-
+let shortUrl;
 
 // Basic user input
+//! THIS SHOULD ULTIMATELY BE TOWARDS USERS OWN TABLE
+//! ALSO, NEED TO SET IT UP SO WE GET THE PROPER NAME OF WHAT TO SEND OVER
+  // AKA: SEARCH BUTTON, ORDER ONLINE, ETC
 function userCRUDInput(input){
+
+  let voteVal;
+  if(input === "2"){
+    voteVal = -1; 
+  } else if (input === "1"){
+    voteVal = 1;
+  }
+
+  console.log('vote val before ', voteVal)  
 
   fetch('http://localhost:3333/rankings/edit/', {
     method: 'POST',
@@ -38,14 +42,15 @@ function userCRUDInput(input){
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      userInput: input,
+      currentUrl: shortURL,
+      voteType: voteVal,
+
     })
   })
   .then(res => res.json())
   .then(data => {
     console.log('returned from user input backend', data);
   })
-
 }
 
 // Gets Julie's algo rankings
@@ -67,19 +72,6 @@ function julieAlgoPostReq(arrayOfImportantEls){
 
   });
 }
-
-
-/**
-  - Standard keys should exist in an obj that can be manipulated
-  const globalKeys = {
-    1 : upvote function fetch request,
-    2 : downvote function fetch request,
-    3 : delete function fetch request,
-  } 
-
-
-
-*/
 
 let messageFromFront;
 // when file gets executed, we need to get a message back from content.js
@@ -125,7 +117,7 @@ chrome.tabs.onActivated.addListener(tab =>{
   // Get activate tab's URL
   chrome.tabs.get(tab.tabId, current_tab_info =>{
     let url = current_tab_info.url;
-    let shortURL = url.match(/\.(.*?)\.co/i)[1];
+    shortURL = url.match(/\.(.*?)\.co/i)[1];
     julieTalks(shortURL)
 
     // Initial fetch request to check if current tab's domain's rankings table exists
