@@ -8,6 +8,8 @@ speak('');
 
 // Toggle Julie TTS on or off
 let letJulieSpeak = true;
+let firstTime = true;
+let firstRanking = true;
 
 // TTS 
 function julieTalks(message){
@@ -53,6 +55,21 @@ function userCRUDInput(input){
   })
 }
 
+// Julie says rankings
+let rankingResponse;
+function julieSaysRankings(){
+  if(firstRanking){
+    julieTalks(`These are the top ${rankingResponse.length} rankings for this site.`) 
+    julieTalks(`If at any point you would like to hear rankings for a site, just press 4 again`);
+    firstRanking = false;
+  }
+  rankingResponse.forEach(el => {
+    julieTalks(`${el.ranking}. ${el.name}`); 
+  }) 
+
+}
+
+
 // Gets Julie's algo rankings
 function julieAlgoPostReq(arrayOfImportantEls){
 
@@ -84,6 +101,11 @@ let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
     return;
   }
 
+  // If user chooses 4 (aka yes to hearing rankings)
+  if(messageFromFront.message === '4'){
+    console.log('4 PRESSED')
+    julieSaysRankings();
+  } 
 
   // This makes Julie stfu
   if(messageFromFront.message === '3'){
@@ -114,6 +136,22 @@ function contentInjection(){
 // ! IMPORTANT: chrome.tabs.onupdate could be for refreshing and not having to actively click on tab
 chrome.tabs.onActivated.addListener(tab =>{
 
+  if(firstTime){
+    // julieTalks(`Hi. I’m Julie. I’ll be your virtual assistant in navigating the web.
+    // Since this is your first time, I’ll quickly go over 3 things you should remember.
+    // 1. If you want bring up all your key options, just press the “~” key for the menu...
+    // `);
+
+    // julieTalks(`
+    // 2. If you want to repeat what I just said, you can press r... 
+    // 3. If you want me to go on mute, just toggle the “3” key on and off!
+    
+    // Otherwise, just click on any tab and I’ll help you navigate the most important parts of that webpage!
+    // `) 
+    firstTime = false;
+    
+  } else {
+
   // Get activate tab's URL
   chrome.tabs.get(tab.tabId, current_tab_info =>{
     let url = current_tab_info.url;
@@ -137,12 +175,13 @@ chrome.tabs.onActivated.addListener(tab =>{
 
       // If user's rankings exist
       if(Array.isArray(data)){
-        julieTalks(`These are the top ${data.length} rankings for this site.`) 
 
-        data.forEach(el => {
-          julieTalks(`${el.ranking}. ${el.name}`); 
-        })
-
+        // Ask user if they'd like to listen to rankings for site
+        if(firstRanking){
+          julieTalks(`Would you like to hear rankings for this site? Press 4 for yes, 5 for no`);
+        }
+        
+        rankingResponse = data;
         if(!tabCache[shortURL]){
           tabCache[shortURL] = true;
           keyPressInjection();
@@ -169,6 +208,7 @@ chrome.tabs.onActivated.addListener(tab =>{
 
     fetchRequestChain();
   }); // end of chrome tabs get url
+  } // end of first time else
 });
 
 
