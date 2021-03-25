@@ -64,22 +64,3 @@ if(domTraverse().length !== 0){
 } else {
   console.log('not inside dom traverse')
 }
-
-//     fetch('http://localhost:3333/rankings/new', {
-//       mode: 'cors',
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({
-//         newElements: result,
-//       })
-//     })
-//       .then(res => json(res))
-//       .then((data)=> {
-//       })
-//     /**
-//       [
-//       { _id: 1, ranking: 1, dom_element: 'button', name: 'search button' }
-//       ]
-//     */

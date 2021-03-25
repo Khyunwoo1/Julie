@@ -21,9 +21,7 @@ function julieTalks(message){
 
 // Basic user input
 async function userCRUDInput(input){
-
   try {
-    // Works
     await fetch('http://localhost:3333/rankings/edit/', {
       method: 'POST',
       headers: {
@@ -34,55 +32,78 @@ async function userCRUDInput(input){
       })
     })
 
-    
-
   } catch (err) {
     console.log('error occured', err);
   }
 }
 
+// Gets Julie's algo rankings
+function julieAlgoPostReq(arrayOfImportantEls){
+
+  fetch('http://localhost:3333/rankings/new', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      newElements: arrayOfImportantEls,
+    })
+  })
+  .then(res => res.json())
+  .then((data)=> {
+    console.log('w3schools data ',data)
+    keyPressInjection();
+
+  });
+}
 
 let messageFromFront;
 // when file gets executed, we need to get a message back from content.js
 let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
 
-  if(req.message){
-    messageFromFront = req.message;
-    console.log('message received from front', messageFromFront)
-    
-    // This makes Julie stfu
-    if(messageFromFront.message === '3'){
-      console.log('will she shut up? ',letJulieSpeak)
-      if(letJulieSpeak){
-        letJulieSpeak = false;
-      } else {
-        letJulieSpeak = true;
-      }
-    } else {
-
-      //! COME BACK AND FIX BUG WITH THIS
-      userCRUDInput(messageFromFront.message);
-      messageFromFront.message = undefined;
-    }
-      
+  messageFromFront = req.message;
+  // if message from front is from content.js, aka it's an array
+  if(Array.isArray(messageFromFront.message)){
+    julieAlgoPostReq(messageFromFront.message);
+    return;
   }
+
+  // This makes Julie stfu
+  if(messageFromFront.message === '3'){
+    if(letJulieSpeak){
+      letJulieSpeak = false;
+    } else {
+      letJulieSpeak = true;
+    }
+  } 
+  userCRUDInput(messageFromFront.message);
+  messageFromFront.message = undefined;
+
 });
 
-// Keypress injection
+// Keypress.js injection
 const tabCache = {};
 function keyPressInjection(){
   chrome.tabs.executeScript(null, {file: './keyPress.js'}, ()=>{    
   })
 };
 
+// Content.js injection
+function contentInjection(){
+  chrome.tabs.executeScript(null, {file: './content.js'}, ()=>{    
+  })
+};
+
 // ! IMPORTANT: chrome.tabs.onupdate could be for refreshing and not having to actively click on tab
 chrome.tabs.onActivated.addListener(tab =>{
 
+  // Get activate tab's URL
   chrome.tabs.get(tab.tabId, current_tab_info =>{
     let url = current_tab_info.url;
     let shortURL = url.match(/\.(.*?)\.co/i)[1];
     julieTalks(shortURL)
 
+    // Initial fetch request to check if current tab's domain's rankings table exists
     function fetchRequestChain(){
 
       fetch('http://localhost:3333/rankings/', {
@@ -97,80 +118,39 @@ chrome.tabs.onActivated.addListener(tab =>{
       .then(res => res.json())
       .then(data =>{
 
-      // if we do get rankings back
-      if(data.length !== 0){
+      // If user's rankings exist
+      if(Array.isArray(data)){
         julieTalks(`These are the top ${data.length} rankings for this site.`) 
-        // loop through responses up to 5
+
         data.forEach(el => {
           julieTalks(`${el.ranking}. ${el.name}`); 
         })
-        // check if in cache
-        if(!tabCache[shortURL]){
 
-          // store url in cache here
+        if(!tabCache[shortURL]){
           tabCache[shortURL] = true;
-          // invoke inject func
           keyPressInjection();
 
         } else {
           messageFromFront.message = undefined;
-          // we put the if conditions for checking key presses here
           console.log('tabCache ', tabCache);
         }
 
       } else {
-        // make sure we set the content.js script inject in the same format as the keypress inject
-        julieTalks(`nope`) 
+        if(!tabCache[shortURL]){
+          tabCache[shortURL] = true;
+          contentInjection();
+
+        } else {
+          messageFromFront.message = undefined;
+          console.log('tabCache ', tabCache);
+        }
       }
-    });
-    }
+    })
+    .catch(err => {
+      console.log('error in fetch request', err);
+    })}
+
     fetchRequestChain();
-    
-
-
-    // fetch('http://localhost:3333/rankings/', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     domainName: shortURL,
-    //   })
-    // })
-    // .then((res) => res.json())
-    // .then((data)=> {
-
-    //   // Check if Data is an empty array  
-    //   if(data.length !== 0){
-    //     // make this more modular in the future
-    //     // possibly another page for just handling responses
-    //     julieTalks('Looks like users had some recommendations for this site. Would you like to hear them? Press 1 for yes, 2 for no') 
-    //     chrome.tabs.addEventListener("keyup", function(event) {
-    //       alert('hi')
-    //       if (event.key === "1") {
-    //         julieTalks(`These are are the top results. ${data[0].ranking}. ${data[0].name}`)
-    //       }
-    //     });
-  
-
-        
-    //   } else {
-    //     chrome.tabs.executeScript(null, {file: './content.js'}, ()=>{
-    //       fetch('http://localhost:3333/rankings/new', {
-    //         method: 'POST',
-    //         headers: {
-    //           'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({
-    //           newElements: messageFromFront.message,
-    //         })
-    //       })
-    //         .then(res => json(res))
-    //         .then((data)=> {
-    //         })
-    //       }); // end of chrome tabs execute
-    //   } // end of else block
-    // }); // end of last .then
   }); // end of chrome tabs get url
 });
 

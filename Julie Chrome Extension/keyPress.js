@@ -1,17 +1,3 @@
-// awesome so this is basically content.js
-/**
-  NOW YOU KNOW HOW THE BACKGROUND/CONTENT DYNAMIC WORKS
-
-  basically you'll have to send messages back and forth to each other and try to keep shit modular
-
-  - 1: listen to rankings
-  - 2: screen reader mode
-  - 3: edit rankings
-  - 4: assign hot keys
-  - R: repeat
-
- */
-
 window.addEventListener("keyup", function(event) {
     
   // sends message to background upon register key press
