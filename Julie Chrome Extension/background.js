@@ -90,6 +90,29 @@ function julieAlgoPostReq(arrayOfImportantEls){
   });
 }
 
+// WHY IS IT LOOPING OR STACKING?
+let tabUpdated = false;
+//! TEST FOR ON UPDATED
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+
+  if (changeInfo.status == 'complete' && tab.status == 'complete' && tab.url != undefined) {
+      if (!tabUpdated) {
+          hi();
+          tabUpdated = true;
+        } 
+      else {
+        hi();
+        tabUpdated = false;
+        
+      }
+  }
+});
+
+function hi(){
+  keyPressInjection();
+}
+
+
 let messageFromFront;
 // when file gets executed, we need to get a message back from content.js
 let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
@@ -100,10 +123,20 @@ let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
     julieAlgoPostReq(messageFromFront.message);
     return;
   }
+  
+  // on Key press, that's when we want to invoke listener, no?
+  // onupdated listener has to be listening the whole time from before when 
+  // key is pressed
+  if(messageFromFront.message === '1' || messageFromFront.message === '2'){
+    console.log('you pressed: ', messageFromFront.message);
+
+  }
+
 
   // If user chooses 4 (aka yes to hearing rankings)
   if(messageFromFront.message === '4'){
     console.log('4 PRESSED')
+    // rankingLoop = true;
     julieSaysRankings();
   } 
 
@@ -114,8 +147,9 @@ let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
     } else {
       letJulieSpeak = true;
     }
-  } 
-  userCRUDInput(messageFromFront.message);
+  }
+  //! UNCOMMENT THIS PART AFTER YOU FIGURE OUT THE WEB NAV PART 
+  // userCRUDInput(messageFromFront.message);
   messageFromFront.message = undefined;
 
 });
@@ -132,6 +166,7 @@ function contentInjection(){
   chrome.tabs.executeScript(null, {file: './content.js'}, ()=>{    
   })
 };
+
 
 // ! IMPORTANT: chrome.tabs.onupdate could be for refreshing and not having to actively click on tab
 chrome.tabs.onActivated.addListener(tab =>{
@@ -178,7 +213,7 @@ chrome.tabs.onActivated.addListener(tab =>{
 
         // Ask user if they'd like to listen to rankings for site
         if(firstRanking){
-          julieTalks(`Would you like to hear rankings for this site? Press 4 for yes, 5 for no`);
+          julieTalks(`Rankings. 1 order Online. 2. Delivery`);
         }
         
         rankingResponse = data;
@@ -187,6 +222,7 @@ chrome.tabs.onActivated.addListener(tab =>{
           keyPressInjection();
 
         } else {
+          // try removing from cache
           messageFromFront.message = undefined;
           console.log('tabCache ', tabCache);
         }
