@@ -12,14 +12,14 @@ let firstTime = true;
 let firstRanking = true;
 
 // TTS 
-function julieTalks(message){
-  if(letJulieSpeak){
-    let msg = new SpeechSynthesisUtterance(message)
-      let voices = window.speechSynthesis.getVoices()
-      msg.voice = voices[4]
-      window.speechSynthesis.speak(msg)
-  }
-}
+// function julieTalks(message){
+//   if(letJulieSpeak){
+//     let msg = new SpeechSynthesisUtterance(message)
+//       let voices = window.speechSynthesis.getVoices()
+//       msg.voice = voices[4]
+//       window.speechSynthesis.speak(msg)
+//   }
+// }
 
 let shortUrl;
 
@@ -57,22 +57,32 @@ function userCRUDInput(input){
 
 // Julie says rankings
 let rankingResponse;
-function julieSaysRankings(){
+function julieSaysRankings(rankingArr){
   if(firstRanking){
-    julieTalks(`These are the top ${rankingResponse.length} rankings for this site.`) 
-    julieTalks(`If at any point you would like to hear rankings for a site, just press 4 again`);
+    julieTalks(`These are the top ${rankingArr.length} rankings for this site.`) 
+    julieTalks(`If at any point you would like to hear rankings for a site, just press 0`);
     firstRanking = false;
+    rankingResponse = rankingArr;
   }
   rankingResponse.forEach(el => {
-    julieTalks(`${el.ranking}. ${el.name}`); 
+    julieTalks(`${el.name}`); 
   }) 
+
+  // if(firstRanking){
+  //   julieTalks(`These are the top ${rankingResponse.length} rankings for this site.`) 
+  //   julieTalks(`If at any point you would like to hear rankings for a site, just press 4 again`);
+  //   firstRanking = false;
+  // }
+  // rankingResponse.forEach(el => {
+  //   julieTalks(`${el.ranking}. ${el.name}`); 
+  // }) 
 
 }
 
 
 // Gets Julie's algo rankings
 function julieAlgoPostReq(arrayOfImportantEls){
-
+  console.log(`DID JULIES ALGO RANKING REQ GET ACTIVIATED?`, arrayOfImportantEls)
   fetch('http://localhost:3333/rankings/new', {
     method: 'POST',
     headers: {
@@ -84,7 +94,9 @@ function julieAlgoPostReq(arrayOfImportantEls){
   })
   .then(res => res.json())
   .then((data)=> {
-    console.log('w3schools data ',data)
+    console.log('amazon data ',data)
+    // should be returning julie talking about this data
+    julieSaysRankings(data)
     keyPressInjection();
 
   });
@@ -109,6 +121,20 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 });
 
 function hi(){
+  console.log('another fetch request for new endpoint', shortURL)
+  fetch('http://localhost:3333/rankings/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          domainName: shortURL,
+        })
+      })
+      .then(res => res.json())
+      .then(data =>{
+        console.log('RESPONSE FROM NEW TAB')
+      })
   keyPressInjection();
 }
 
@@ -116,7 +142,7 @@ function hi(){
 let messageFromFront;
 // when file gets executed, we need to get a message back from content.js
 let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
-
+  console.log('DID IT GET THE MESSAGE FROM CONTENT BACK TO BACKGROUND?')
   messageFromFront = req.message;
   // if message from front is from content.js, aka it's an array
   if(Array.isArray(messageFromFront.message)){
@@ -134,8 +160,8 @@ let result = chrome.runtime.onMessage.addListener((req, sender, sendRes)=>{
 
 
   // If user chooses 4 (aka yes to hearing rankings)
-  if(messageFromFront.message === '4'){
-    console.log('4 PRESSED')
+  if(messageFromFront.message === '0'){
+    console.log('0 PRESSED')
     // rankingLoop = true;
     julieSaysRankings();
   } 
@@ -240,6 +266,15 @@ chrome.tabs.onActivated.addListener(tab =>{
     })
     .catch(err => {
       console.log('error in fetch request', err);
+      console.log(`hitting this means current url isnt on all websites and doesnt have its own table`)
+      if(!tabCache[shortURL]){
+        tabCache[shortURL] = true;
+        contentInjection();
+
+      } else {
+        messageFromFront.message = undefined;
+        console.log('tabCache ', tabCache);
+      }
     })}
 
     fetchRequestChain();

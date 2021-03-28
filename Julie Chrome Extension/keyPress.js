@@ -14,6 +14,8 @@ window.addEventListener("keyup", function(event) {
     // search bar
     console.log('1 clicked ')
     let searchBar = document.getElementById('twotabsearchtextbox');
+
+    // this should really be: if search bar then user can enter
     searchBar.value = 'pull up bar'
     let searchButton = document.getElementById('nav-search-submit-button');
     searchButton.click();
@@ -132,8 +134,8 @@ window.addEventListener("keyup", function(event) {
 
   // It seems like it doesn't really even matter on this end what the event is including
   // letters
-  // const myMessage = {message: event.key}
-  // console.log('myMessage ', myMessage)
-  // chrome.runtime.sendMessage({message: myMessage});
+  const myMessage = {message: event.key}
+  console.log('myMessage ', myMessage)
+  chrome.runtime.sendMessage({message: myMessage});
 
 });
